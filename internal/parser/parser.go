@@ -1,32 +1,33 @@
-// Package parser provides readers for structured log formats.
-// It defines the shared LogEntry type used across JSON and CSV parsers.
 package parser
 
-import "time"
-
-// LogEntry represents a single parsed log line with an optional timestamp
-// and a map of all extracted fields.
-type LogEntry struct {
-	// Timestamp is the parsed time value from the designated timestamp field.
-	// It is zero if no timestamp could be determined.
-	Timestamp time.Time
-
-	// Fields holds all key-value pairs extracted from the log line.
-	Fields map[string]interface{}
-
-	// Raw is the original unparsed line or row as read from the source.
-	Raw string
+// SupportedFormats lists the log formats that logslice can parse.
+var SupportedFormats = []string{
+	"json",
+	"csv",
+	"logfmt",
 }
 
-// Format identifies the log file format to use when parsing.
-type Format string
+// FormatDescription returns a human-readable description for a given format
+// name, or an empty string if the format is unknown.
+func FormatDescription(format string) string {
+	switch format {
+	case "json":
+		return "Newline-delimited JSON (one object per line)"
+	case "csv":
+		return "Comma-separated values with a header row"
+	case "logfmt":
+		return "Heroku-style logfmt (key=value pairs)"
+	default:
+		return ""
+	}
+}
 
-const (
-	FormatJSON Format = "json"
-	FormatCSV  Format = "csv"
-)
-
-// SupportedFormats returns the list of format identifiers recognised by logslice.
-func SupportedFormats() []Format {
-	return []Format{FormatJSON, FormatCSV}
+// IsSupported reports whether format is in SupportedFormats.
+func IsSupported(format string) bool {
+	for _, f := range SupportedFormats {
+		if f == format {
+			return true
+		}
+	}
+	return false
 }
