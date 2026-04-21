@@ -18,7 +18,15 @@ type LogEntry struct {
 // TimeFields is the ordered list of JSON keys tried when extracting a timestamp.
 var TimeFields = []string{"time", "timestamp", "ts", "@timestamp"}
 
-// ParseJSONLines reads newline-delimited JSON from r and returns a slice of
+// timeFormats is the ordered list of time layouts tried when parsing string timestamps.
+var timeFormats = []string{
+	time.RFC3339Nano,
+	time.RFC3339,
+	"2006-01-02T15:04:05",
+	"2006-01-02 15:04:05",
+}
+
+// ParseJSONLines reads newline-del of
 // LogEntry values. Lines that cannot be parsed are skipped with a warning.
 func ParseJSONLines(r io.Reader) ([]LogEntry, error) {
 	var entries []LogEntry
@@ -60,13 +68,6 @@ func ParseJSONLines(r io.Reader) ([]LogEntry, error) {
 
 // extractTimestamp tries each known time field key and parses common formats.
 func extractTimestamp(fields map[string]interface{}) (time.Time, error) {
-	formats := []string{
-		time.RFC3339Nano,
-		time.RFC3339,
-		"2006-01-02T15:04:05",
-		"2006-01-02 15:04:05",
-	}
-
 	for _, key := range TimeFields {
 		val, ok := fields[key]
 		if !ok {
@@ -75,10 +76,8 @@ func extractTimestamp(fields map[string]interface{}) (time.Time, error) {
 
 		switch v := val.(type) {
 		case string:
-			for _, f := range formats {
-				if t, err := time.Parse(f, v); err == nil {
-					return t, nil
-				}
+			if t, err := parseTimeString(v); err == nil {
+				return t, nil
 			}
 		case float64:
 			// Unix epoch seconds (possibly with sub-second precision)
@@ -89,4 +88,15 @@ func extractTimestamp(fields map[string]interface{}) (time.Time, error) {
 	}
 
 	return time.Time{}, fmt.Errorf("no recognisable timestamp field found")
+}
+
+// parseTimeString attempts to parse s using each of the known time formats,
+// returning the first successful result. Returns an error if none match.
+func parseTimeString(s string) (time.Time, error) {
+	for _, f := range timeFormats {
+		if t, err := time.Parse(f, s); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("could not parse time string %q", s)
 }
