@@ -1,33 +1,30 @@
 package parser
 
-// SupportedFormats lists the log formats that logslice can parse.
-var SupportedFormats = []string{
-	"json",
-	"csv",
-	"logfmt",
-}
-
-// FormatDescription returns a human-readable description for a given format
-// name, or an empty string if the format is unknown.
+// FormatDescription returns a human-readable description of a supported log format.
 func FormatDescription(format string) string {
 	switch format {
 	case "json":
-		return "Newline-delimited JSON (one object per line)"
+		return "Newline-delimited JSON (one JSON object per line)"
 	case "csv":
 		return "Comma-separated values with a header row"
 	case "logfmt":
-		return "Heroku-style logfmt (key=value pairs)"
+		return "Logfmt key=value pairs (e.g. level=info msg=started)"
 	default:
-		return ""
+		return "Unknown format"
 	}
 }
 
-// IsSupported reports whether format is in SupportedFormats.
+// IsSupported reports whether the given format name is supported by logslice.
 func IsSupported(format string) bool {
-	for _, f := range SupportedFormats {
-		if f == format {
-			return true
-		}
+	switch format {
+	case "json", "csv", "logfmt":
+		return true
+	default:
+		return false
 	}
-	return false
+}
+
+// SupportedFormats returns the list of all supported format names.
+func SupportedFormats() []string {
+	return []string{"json", "csv", "logfmt"}
 }
