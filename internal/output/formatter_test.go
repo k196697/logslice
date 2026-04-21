@@ -73,3 +73,33 @@ func TestFormatter_DefaultTimeField(t *testing.T) {
 		t.Errorf("expected default time field 'timestamp', got %q", f.TimeField)
 	}
 }
+
+// TestFormatter_MultipleWrites verifies that writing multiple entries appends
+// each on its own line without interleaving or overwriting previous output.
+func TestFormatter_MultipleWrites(t *testing.T) {
+	var buf bytes.Buffer
+	f := output.NewFormatter(&buf, output.FormatText, "timestamp")
+
+	entries := []parser.LogEntry{
+		makeEntry(sampleTime, map[string]interface{}{"level": "info", "msg": "first"}),
+		makeEntry(sampleTime.Add(time.Second), map[string]interface{}{"level": "warn", "msg": "second"}),
+	}
+
+	for _, entry := range entries {
+		if err := f.Write(entry); err != nil {
+			t.Fatalf("unexpected error writing entry: %v", err)
+		}
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "first") {
+		t.Errorf("expected 'first' in output, got: %s", out)
+	}
+	if !strings.Contains(out, "second") {
+		t.Errorf("expected 'second' in output, got: %s", out)
+	}
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	if len(lines) != 2 {
+		t.Errorf("expected 2 lines of output, got %d: %s", len(lines), out)
+	}
+}
