@@ -87,3 +87,17 @@ func TestParseTimestampString_Formats(t *testing.T) {
 		}
 	}
 }
+
+func TestParseTimestampString_InvalidInput(t *testing.T) {
+	cases := []string{
+		"",
+		"not-a-timestamp",
+		"99999-99-99",
+	}
+	for _, c := range cases {
+		_, err := parseTimestampString(c)
+		if err == nil {
+			t.Errorf("expected error for input %q, got nil", c)
+		}
+	}
+}
