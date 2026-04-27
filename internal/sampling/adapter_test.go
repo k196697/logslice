@@ -38,10 +38,24 @@ func TestParseConfig_RateOutOfRange(t *testing.T) {
 	}
 }
 
+func TestParseConfig_RateNegative(t *testing.T) {
+	_, err := ParseConfig(Config{RateStr: "-0.1"})
+	if err == nil {
+		t.Error("expected error for negative rate")
+	}
+}
+
 func TestParseConfig_EveryLessThanOne(t *testing.T) {
 	_, err := ParseConfig(Config{EveryStr: "0"})
 	if err == nil {
 		t.Error("expected error for every=0")
+	}
+}
+
+func TestParseConfig_InvalidEvery(t *testing.T) {
+	_, err := ParseConfig(Config{EveryStr: "abc"})
+	if err == nil {
+		t.Error("expected error for non-numeric every")
 	}
 }
 
