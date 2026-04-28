@@ -17,7 +17,7 @@ func DefaultOptions() Options {
 
 // Entry is a minimal representation of a log entry used by this package.
 type Entry struct {
-	Fields map[string]string
+	Fields        map[string]string
 	TimestampNano int64
 }
 
@@ -37,4 +37,13 @@ func Run(entries []Entry, opts Options) []Entry {
 	}
 
 	return entries[:opts.MaxEntries]
+}
+
+// Remaining returns the number of entries that would be dropped by applying
+// the given options. Returns 0 if no limit is set or no entries would be dropped.
+func Remaining(entries []Entry, opts Options) int {
+	if opts.MaxEntries <= 0 || opts.MaxEntries >= len(entries) {
+		return 0
+	}
+	return len(entries) - opts.MaxEntries
 }
